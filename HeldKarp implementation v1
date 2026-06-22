@@ -1,0 +1,155 @@
+import math
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+from itertools import combinations
+
+
+# ==========================================================
+# HELD-KARP ALGORITHM
+# ==========================================================
+
+def held_karp(distance_matrix):
+    n = len(distance_matrix)
+    dp = {}
+
+    for k in range(1, n):
+        dp[(1 << k, k)] = (distance_matrix[0][k], 0)
+
+    for subset_size in range(2, n):
+
+        for subset in combinations(range(1, n), subset_size):
+
+            bits = 0
+            for city in subset:
+                bits |= 1 << city
+
+            for k in subset:
+
+                prev_bits = bits & ~(1 << k)
+
+                best_cost = float("inf")
+                best_parent = None
+
+                for m in subset:
+                    if m == k:
+                        continue
+
+                    cost = dp[(prev_bits, m)][0] + distance_matrix[m][k]
+
+                    if cost < best_cost:
+                        best_cost = cost
+                        best_parent = m
+
+                dp[(bits, k)] = (best_cost, best_parent)
+
+    full_mask = sum(1 << i for i in range(1, n))
+
+    best_cost = float("inf")
+    best_last = None
+
+    for k in range(1, n):
+        cost = dp[(full_mask, k)][0] + distance_matrix[k][0]
+        if cost < best_cost:
+            best_cost = cost
+            best_last = k
+
+    # reconstruct path
+    path = [0]
+    bits = full_mask
+    last = best_last
+
+    temp = []
+
+    for _ in range(n - 1):
+        temp.append(last)
+        _, last = dp[(bits, last)]
+        bits &= ~(1 << temp[-1])
+
+    path.extend(reversed(temp))
+    path.append(0)
+
+    return best_cost, path
+
+
+# ==========================================================
+# DISTANCE MATRIX
+# ==========================================================
+
+def build_distance_matrix(coords):
+    n = len(coords)
+    matrix = [[0]*n for _ in range(n)]
+
+    for i in range(n):
+        for j in range(n):
+            matrix[i][j] = math.dist(coords[i], coords[j])
+
+    return matrix
+
+
+# ==========================================================
+# PLOTTING WITH BACKGROUND IMAGE
+# ==========================================================
+
+def plot_route(coords, path, cost, image_path=None):
+
+    fig, ax = plt.subplots(figsize=(10, 8))
+
+    x = [c[0] for c in coords]
+    y = [c[1] for c in coords]
+
+    # ---------------- BACKGROUND IMAGE ----------------
+    if image_path:
+        img = mpimg.imread(image_path)
+
+        ax.imshow(
+            img,
+            extent=[min(x), max(x), min(y), max(y)],
+            origin="lower",
+            alpha=0.7
+        )
+
+    # ---------------- NODES ----------------
+    ax.scatter(x, y, color="red", s=120, zorder=3)
+
+    for i, (xi, yi) in enumerate(coords):
+        ax.text(xi + 1, yi + 1, str(i), fontsize=12)
+
+    # ---------------- ROUTE ----------------
+    for i in range(len(path) - 1):
+        a = coords[path[i]]
+        b = coords[path[i + 1]]
+
+        ax.plot([a[0], b[0]], [a[1], b[1]], "b-", linewidth=2)
+
+    # start node highlight
+    ax.scatter(coords[0][0], coords[0][1], color="green", s=200)
+
+    ax.set_title(f"Held-Karp TSP (Cost: {cost:.2f})")
+    ax.set_aspect("equal")
+    ax.grid(True, alpha=0.3)
+
+    plt.show()
+
+# MAIN
+
+if __name__ == "__main__":
+
+    coords = [  
+        (10, 20),
+        (30, 80),
+        (60, 70),
+        (90, 40),
+        (70, 10),
+        (50, 30),
+        (20, 60),
+        (80, 90),
+        (40, 50),
+        (15, 10)]
+
+    dist = build_distance_matrix(coords)
+    cost, path = held_karp(dist)
+
+    print("Optimal cost:", round(cost, 2))
+    print("Path:", path)
+
+    plot_route(coords,path,cost,image_path="background.png")
