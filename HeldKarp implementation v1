@@ -1,3 +1,4 @@
+
 import math
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -153,3 +154,181 @@ if __name__ == "__main__":
     print("Path:", path)
 
     plot_route(coords,path,cost,image_path="background.png")
+'''
+#held karp using plotly instead of matplotlib
+import math
+import plotly.graph_objects as go
+from itertools import combinations
+
+
+# ==========================================================
+# HELD-KARP (EXACT TSP)
+# ==========================================================
+
+def held_karp(dist):
+    n = len(dist)
+    dp = {}
+
+    # base cases
+    for k in range(1, n):
+        dp[(1 << k, k)] = (dist[0][k], 0)
+
+    # subsets
+    for size in range(2, n):
+        for subset in combinations(range(1, n), size):
+
+            bits = 0
+            for c in subset:
+                bits |= 1 << c
+
+            for k in subset:
+                prev = bits & ~(1 << k)
+
+                best_cost = float("inf")
+                best_parent = None
+
+                for m in subset:
+                    if m == k:
+                        continue
+
+                    cost = dp[(prev, m)][0] + dist[m][k]
+
+                    if cost < best_cost:
+                        best_cost = cost
+                        best_parent = m
+
+                dp[(bits, k)] = (best_cost, best_parent)
+
+    full = sum(1 << i for i in range(1, n))
+
+    best_cost = float("inf")
+    best_last = None
+
+    for k in range(1, n):
+        cost = dp[(full, k)][0] + dist[k][0]
+        if cost < best_cost:
+            best_cost = cost
+            best_last = k
+
+    # reconstruct path
+    path = [0]
+    bits = full
+    last = best_last
+
+    temp = []
+
+    for _ in range(n - 1):
+        temp.append(last)
+        _, parent = dp[(bits, last)]
+        bits &= ~(1 << last)
+        last = parent
+
+    path.extend(reversed(temp))
+    path.append(0)
+
+    return best_cost, path
+
+
+# ==========================================================
+# DISTANCE MATRIX
+# ==========================================================
+
+def build_distance_matrix(coords):
+    n = len(coords)
+    dist = [[0] * n for _ in range(n)]
+
+    for i in range(n):
+        for j in range(n):
+            dist[i][j] = math.dist(coords[i], coords[j])
+
+    return dist
+
+
+# ==========================================================
+# PLOTLY VISUALIZATION
+# ==========================================================
+
+def plot_tsp(coords, path):
+
+    x = [c[0] for c in coords]
+    y = [c[1] for c in coords]
+
+    fig = go.Figure()
+
+    # ---- nodes ----
+    fig.add_trace(go.Scatter(
+        x=x,
+        y=y,
+        mode="markers+text",
+        text=[str(i) for i in range(len(coords))],
+        textposition="top center",
+        marker=dict(size=12, color="red"),
+        name="Cities"
+    ))
+
+    # ---- route ----
+    route_x = []
+    route_y = []
+
+    for i in range(len(path) - 1):
+        a = coords[path[i]]
+        b = coords[path[i + 1]]
+
+        route_x += [a[0], b[0], None]
+        route_y += [a[1], b[1], None]
+
+    fig.add_trace(go.Scatter(
+        x=route_x,
+        y=route_y,
+        mode="lines",
+        line=dict(color="blue", width=3),
+        name="Optimal Route"
+    ))
+
+    # highlight start
+    fig.add_trace(go.Scatter(
+        x=[coords[0][0]],
+        y=[coords[0][1]],
+        mode="markers",
+        marker=dict(size=16, color="green"),
+        name="Start/End"
+    ))
+
+    fig.update_layout(
+        title="Held-Karp TSP (Exact Solution)",
+        xaxis_title="X",
+        yaxis_title="Y",
+        showlegend=True
+    )
+
+    fig.show()
+
+
+# ==========================================================
+# MAIN
+# ==========================================================
+
+if __name__ == "__main__":
+
+    # hardcoded nodes
+    coords = [
+        (10, 20),
+        (30, 80),
+        (60, 70),
+        (90, 40),
+        (70, 10),
+        (50, 30),
+        (20, 60),
+        (80, 90)
+    ]
+
+    dist = build_distance_matrix(coords)
+
+    cost, path = held_karp(dist)
+
+    print("Optimal cost:", round(cost, 2))
+    print("Path:", path)
+
+    plot_tsp(coords, path)
+'''
+
