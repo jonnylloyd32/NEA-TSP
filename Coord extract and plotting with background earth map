@@ -1,0 +1,91 @@
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+from abc import ABC, abstractmethod
+
+x_coords= []
+y_coords = []
+
+
+try:
+    coord_file = input("Enter the file with the coordinates you want to extract!")
+    with open(coord_file, "r") as file:
+        for line in file:
+            x, y = map(int, line.split(","))
+            y_coords.append(y)
+            x_coords.append(x)
+except FileNotFoundError:
+    print("file must also be attached to the documents")
+    quit()
+except TypeError:
+    print("file name must be in the correct format -> For example: filename.txt")
+
+
+plt.ylim(-90, 90)
+plt.xlim(-180, 180)
+
+#plt.gca().xaxis.set_major_locator(ticker.MultipleLocator(10))
+#plt.gca().yaxis.set_major_locator(ticker.MultipleLocator(10))
+
+img = plt.imread("Equirectangular.jpg")
+
+plt.imshow(img, extent=[-180, 180, -90, 90])
+plt.scatter(x_coords, y_coords, color = "gold", s = 10)
+
+
+
+for i in range(len(x_coords)):
+    plt.text(x_coords[i], y_coords[i], str(i), color = "red")
+
+
+plt.xlabel("X Coordinate")
+plt.ylabel("Y Coordinate")
+plt.title("TSP Cities")
+plt.axis("equal")    
+plt.grid(True)
+plt.show()
+
+
+'''
+
+AI WORK
+
+
+# Strategy interface
+class PathfindingStrategy(ABC):
+    @abstractmethod
+    def find_path(self, start, end):
+        pass
+
+
+# Concrete strategies
+class BreadthFirstSearch(PathfindingStrategy):
+    def find_path(self, start, end):
+        return f"Finding path from {start} to {end} using BFS"
+
+
+class Dijkstra(PathfindingStrategy):
+    def find_path(self, start, end):
+        return f"Finding path from {start} to {end} using Dijkstra"
+
+
+class AStar(PathfindingStrategy):
+    def find_path(self, start, end):
+        return f"Finding path from {start} to {end} using A*"
+
+
+# Context
+class Robot:
+    def __init__(self, strategy):
+        self.strategy = strategy
+
+    def navigate(self, start, end):
+        return self.strategy.find_path(start, end)
+
+
+# Usage
+fast_robot = Robot(AStar())
+cheap_robot = Robot(BreadthFirstSearch())
+
+print(fast_robot.navigate("A", "B"))
+print(cheap_robot.navigate("A", "B"))
+'''
