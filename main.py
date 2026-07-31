@@ -122,7 +122,7 @@ class NN(tspSolver):
     
     
     def solve(self, cities):
-        timeStart = time.perf_counter()
+        
         totalDistance = 0
         print("running nearest neighbour")
         route = []
@@ -162,7 +162,7 @@ class NN(tspSolver):
 
         totalDistance += current.distanceTo(route[0])    
         print (f"this routes total distance is: {totalDistance}")
-        timeEnd = time.perf_counter()
+        
         print(f"Runtime: {timeEnd - timeStart:.6f} seconds")
         print(route)
         return route
@@ -173,10 +173,10 @@ class twoOpt(tspSolver):
 
    
     def solve(self, cities):
-        timeStart = time.perf_counter()
-        print("Running two opt heuristic solver")
+        
+        
         route = NN().solve(cities)
-        improved = True
+        improved = True 
 
         #while the routes efficiency is still being improved
         while improved:
@@ -211,9 +211,9 @@ class twoOpt(tspSolver):
                     
 
         print("Improved distance:", RouteDistanceCalc(route))
-        timeEnd = time.perf_counter()
         
-        print(f"Runtime: {timeEnd - timeStart:.6f} seconds")
+        
+       
         print(route)
         return route
 
@@ -223,8 +223,8 @@ class BruteForce(tspSolver):
 
     
     def solve(self, cities):
-        timeStart = time.perf_counter()
-        print("running Brute Force")
+        
+        
         print(cities)
         #loads it as infinity because we are lookiong for the smallest value so we start checking from the biggest value
         bestDistance = math.inf
@@ -251,11 +251,12 @@ class BruteForce(tspSolver):
 
 
 
+        totalDistance = bestDistance
+        #print(f"shortest distance calculated: {bestDistance}")
+        
 
-        print(f"shortest distance calculated: {bestDistance}")
-
-        timeEnd = time.perf_counter()
-        print(f"Runtime: {timeEnd - timeStart:.6f} seconds")
+       
+        
 
         return bestRoute
 
@@ -263,9 +264,9 @@ class BruteForce(tspSolver):
 #dikjstras solver class
 class Dijkstras(tspSolver):
 
-    timeStart = time.perf_counter()
+    
     def solve(self, cities):
-        print("running Dijkstras Algorithm")
+        
         return cities
         
 
@@ -277,16 +278,39 @@ class TSP:
     def solve(self, cities):
         return self.strategy.solve(cities)
 
-algorithmChoice = int(input("what algorithm woudl you like to choose: \n 1) Nearest Neighbour. \n 2) Brute Force. \n 3) Dijkstras. \n 4) Two Opt heuristic. \n "))
+algorithmChoice = int(input("what algorithm woudl you like to choose: \n 1) Nearest Neighbour. \n 2) Brute Force. \n 3) Two Opt heuristic. \n "))
 #algorithmChoice = 1
+
 if algorithmChoice == 1:
+    timeStart = time.perf_counter()
+    print("running nearest neighbour")
     solver = TSP(NN())
+    timeEnd = time.perf_counter()
+    print(f"Runtime: {timeEnd - timeStart:.6f} seconds")
+
+
 elif algorithmChoice == 2:
+    timeStart = time.perf_counter()
+    print("running Brute Force algorithm")
     solver = TSP(BruteForce())
+    timeEnd = time.perf_counter()
+    print(f"Runtime: {timeEnd - timeStart:.6f} seconds")
+
+
 elif algorithmChoice == 3:
-    solver = TSP(Dijkstras())
-elif algorithmChoice == 4:
+    timeStart = time.perf_counter()
+    print("running two opt heuristic")
     solver = TSP(twoOpt())
+    timeEnd = time.perf_counter()
+    print(f"Runtime: {timeEnd - timeStart:.6f} seconds")
+
+
+elif algorithmChoice == 4:
+    timeStart = time.perf_counter()
+    print("running Dijkstra's")
+    solver = TSP(Dijkstras())
+    timeEnd = time.perf_counter()
+    print(f"Runtime: {timeEnd - timeStart:.6f} seconds")
 
 
 route = solver.solve(cities)
