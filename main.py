@@ -1,10 +1,13 @@
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
-import networkx as nx
+#import matplotlib.ticker as ticker
+#import networkx as nx
 import time
+import numpy as np
+import math
 from abc import ABC, abstractmethod
 from itertools import permutations
-import math
+from itertools import combinations
+
 #print(nx.__version__)
 
 
@@ -95,7 +98,7 @@ class Plotter:
         xCoords.append(self.cities[0].x)
         yCoords.append(self.cities[0].y)
         plt.plot(xCoords, yCoords, color="white")
-        plt.show()
+        
 
         
         #handles the values and labels on the graph that never change
@@ -140,7 +143,7 @@ class NN(tspSolver):
             nearest = unvisited[0]
 
  
-        unvisited.remove(nearest)
+        #unvisited.remove(nearest)
         #checks if they have all been visited yet and continues if there are still some cities that are yet to be visited
         while len(unvisited) > 0:
             nearest = unvisited[0]
@@ -163,7 +166,7 @@ class NN(tspSolver):
         totalDistance += current.distanceTo(route[0])    
         print (f"this routes total distance is: {totalDistance}")
         
-        print(f"Runtime: {timeEnd - timeStart:.6f} seconds")
+        
         print(route)
         return route
         #return cities
@@ -223,6 +226,8 @@ class BruteForce(tspSolver):
 
     
     def solve(self, cities):
+        if len(cities) > 12:
+            print("WARNING: MANY NODES PRESENT WILL TAKE GAES")
         
         
         print(cities)
@@ -252,7 +257,7 @@ class BruteForce(tspSolver):
 
 
         totalDistance = bestDistance
-        #print(f"shortest distance calculated: {bestDistance}")
+        print(f"shortest distance calculated: {bestDistance}")
         
 
        
@@ -261,13 +266,112 @@ class BruteForce(tspSolver):
         return bestRoute
 
 
-#dikjstras solver class
-class Dijkstras(tspSolver):
-
-    
+#HeldKarp solver class
+#please dont ask me to explain any of this dude, im talking to you Joe!
+#OR ELSE... *ominous music plays*
+#its actually given my brain aids
+class HeldKarp(tspSolver):
     def solve(self, cities):
-        
-        return cities
+        #number of cities in the path
+        numCities = len(cities)
+
+
+        #this bastard creates a matrix using the number of cities, at the time its 12, so it creates a 12 X 12  2D matrix an dfills it in with 0's
+        dist = np.zeros((numCities, numCities), dtype=float)
+        #print(dist)
+
+
+        #fills in the matrix with the distanceTo method essentially calculating the distance to each node from the starting point
+        for i in range (numCities):
+            for j in range (numCities):
+                dist[i][j] = cities[i].distanceTo(cities[j])
+
+        #print(dist)
+
+        #two dictionaries
+        #dp is shortest distance knonwn for a route
+        #it is a subset of visited cites and the current city
+
+
+        # p[arent is the previous city
+        #
+
+        #
+        dp = {}
+        parent = {}
+        for i in range(1, numCities):
+            subset = frozenset([0, i])
+
+            dp[(subset, i)] = dist[0][i]
+
+            parent[(subset, i)] = 0
+        #print("dp:", dp)
+        #print("parent:", parent)
+        #print("number of cities:", numCities)
+       
+        for subset_size in range(3, numCities + 1):
+            for subset in combinations(range(numCities), subset_size):
+                if 0 not in subset:
+                    continue
+
+                subset = frozenset(subset)
+
+                for j in subset:
+                    if j == 0:
+                        continue
+
+                    #
+                    best_cost = float('inf')
+                    best_parent = None
+
+                    prev_subset = subset - {j}
+
+                    for i in prev_subset:
+                        if i == 0:
+                            continue
+
+                        cost = dp[(prev_subset, i)] + dist[i][j]
+                        if cost < best_cost:
+                            best_cost = cost
+                            best_parent = i
+
+                    dp[(subset, j)] = best_cost
+                    parent[(subset, j)] = best_parent
+
+        all_cities = frozenset(range(numCities))
+
+        best_cost = float('inf')
+        best_last_city = None
+
+        for j in range(1, numCities):
+            cost = dp[(all_cities, j)] + dist[j][0]
+            if cost < best_cost:
+                best_cost = cost
+                best_last_city = j
+
+        path = []
+
+        subset = all_cities
+        last = best_last_city
+
+        while last != 0:
+            path.append(last)
+            last = parent[(subset, last)]
+            subset = subset - {path[-1]}
+
+        path.append(0)
+
+        path.reverse()
+        path.append(0)
+
+
+
+        myRoute = [cities[i] for i in path]
+
+
+        totalDist = RouteDistanceCalc(myRoute)
+        print(totalDist)
+        return myRoute
         
 
 class TSP:
@@ -278,7 +382,11 @@ class TSP:
     def solve(self, cities):
         return self.strategy.solve(cities)
 
-algorithmChoice = int(input("what algorithm woudl you like to choose: \n 1) Nearest Neighbour. \n 2) Brute Force. \n 3) Two Opt heuristic. \n "))
+try:
+    algorithmChoice = int(input("what algorithm woudl you like to choose: \n 1) Nearest Neighbour. \n 2) Brute Force. \n 3) Two Opt heuristic. \n 4) Held Karp algorithm. \n"))
+except ValueError:
+    raise Exception("Please enter a number")
+
 #algorithmChoice = 1
 
 if algorithmChoice == 1:
@@ -290,31 +398,29 @@ if algorithmChoice == 1:
 
 
 elif algorithmChoice == 2:
-    timeStart = time.perf_counter()
+
     print("running Brute Force algorithm")
     solver = TSP(BruteForce())
-    timeEnd = time.perf_counter()
-    print(f"Runtime: {timeEnd - timeStart:.6f} seconds")
+
 
 
 elif algorithmChoice == 3:
-    timeStart = time.perf_counter()
+
     print("running two opt heuristic")
     solver = TSP(twoOpt())
-    timeEnd = time.perf_counter()
-    print(f"Runtime: {timeEnd - timeStart:.6f} seconds")
+
 
 
 elif algorithmChoice == 4:
-    timeStart = time.perf_counter()
-    print("running Dijkstra's")
-    solver = TSP(Dijkstras())
-    timeEnd = time.perf_counter()
-    print(f"Runtime: {timeEnd - timeStart:.6f} seconds")
+    
+    print("running Held Karp's")
+    solver = TSP(HeldKarp())
+    
 
-
+timeStart = time.perf_counter()
 route = solver.solve(cities)
-
+timeEnd = time.perf_counter()
+print(f"Runtime: {timeEnd - timeStart:.6f} seconds")
 #plots the graph itself
 plotter = Plotter(route)
 plotter.drawGraph()
