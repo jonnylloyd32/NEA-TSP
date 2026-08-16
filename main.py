@@ -1,14 +1,34 @@
+from fileinput import filename
 import matplotlib.pyplot as plt
 #import matplotlib.ticker as ticker
 #import networkx as nx
+import tkinter as tk
 import time
 import numpy as np
 import math
+import threading
+
 from abc import ABC, abstractmethod
 from itertools import permutations
 from itertools import combinations
+from tkinter import *
+from tkinter import messagebox
+from tkinter import filedialog
+from tkinter import ttk
+from tkinter.ttk import *
+from PIL import Image, ImageTk
+
 
 #print(nx.__version__)
+#using tkinter to create the user intferface
+
+
+
+
+
+#tk.Radiobutton(root, text="A", variable=algorithmChoice, value=1).pack(anchor=tk.W)
+#tk.Radiobutton(root, text="B", variable=algorithmChoice, value=2).pack(anchor=tk.W)
+
 
 
 #creates the city class and give each object x and y coordinate parameters
@@ -40,6 +60,7 @@ def RouteDistanceCalc(route):
     return distance
 
 
+
 #the function to load the cities from the given filename
 def loadCities(filename):
     cities = []
@@ -61,11 +82,26 @@ def loadCities(filename):
         raise Exception("coordinates in the file must be in the form x,y") 
     return cities
 
-#gets the name of the file to read
-#coord_file = input("Enter the name of the file you wnat to solve for:")
-coord_file = "Coords.txt"
-#actually does the loading
-cities = loadCities(coord_file)
+
+
+
+
+
+
+
+
+#simply used to load default cities for testing purpose and menu additions
+def loadDefaultCities():
+    cities = []
+    file = "Coords.txt"
+    with open() as file:
+            for line in file:
+                x, y = map(int, line.strip().split(","))
+                cities.append(City(x, y))
+    
+    return cities
+
+
 
 class Plotter:
     def __init__(self, cities):
@@ -382,48 +418,150 @@ class TSP:
     def solve(self, cities):
         return self.strategy.solve(cities)
 
-try:
-    algorithmChoice = int(input("what algorithm woudl you like to choose: \n 1) Nearest Neighbour. \n 2) Brute Force. \n 3) Two Opt heuristic. \n 4) Held Karp algorithm. \n"))
-except ValueError:
-    raise Exception("Please enter a number")
 
-#algorithmChoice = 1
+def run_solver(algorithmChoice):
 
-if algorithmChoice == 1:
-    timeStart = time.perf_counter()
-    print("running nearest neighbour")
-    solver = TSP(NN())
-    timeEnd = time.perf_counter()
-    print(f"Runtime: {timeEnd - timeStart:.6f} seconds")
+    progress_window = tk.Toplevel(root)
+    progress_window.title("Calculating...")
+    progress_window.geometry("400x300")
+    progress_window.resizable(False, False)
+    try:
+        cities = loadCities(coordinateChoice.get())
+
+        if algorithmChoice == 1:
+            solver = TSP(NN())
+
+        elif algorithmChoice == 2:
+            solver = TSP(BruteForce())
+
+        elif algorithmChoice == 3:
+            solver = TSP(twoOpt())
+
+        elif algorithmChoice == 4:
+            solver = TSP(HeldKarp())
+
+        else:
+            messagebox.showerror("Error", "Please select an algorithm.")
+            return
+
+        timeStart = time.perf_counter()
+        gif = Image.open("hood_irony_walking.gif")
+        frames = []
+
+        try:
+            while True:
+                frame = ImageTk.PhotoImage(gif.copy())
+                frames.append(frame)
+                gif.seek(len(frames))
+        except:
+            pass
+
+        progress_window.geometry("400x300+1400+100")
+        gif_label = tk.Label(progress_window)
+        #gif_label.place(x=300,y=100)
+        gif_label.pack(pady=10)
+
+        #actually animates thegifF
+        def animate(frame_number=0):
+            if progress_window.winfo_exists():
+                gif_label.config(image=frames[frame_number])
+                progress_window.after(100, animate, (frame_number + 1) % len(frames))
+        
+        animate()
+
+        route = solver.solve(cities)
+        timeEnd = time.perf_counter()
+
+        runtime = timeEnd - timeStart
+
+        print(f"Runtime: {runtime:.6f} seconds")
+        #gif_label.destroy()
+        #progress_window.destroy()
+
+        plotter = Plotter(route)
+        plotter.drawGraph()
+
+    except Exception as e:
+        messagebox.showerror("Error", str(e))
+
+'''
+def chooseFile():
+    display = tk.Toplevel(root)
+    display.title("file: ")
+    display.geometry("50x150")
+    display.resizable(False, False)
 
 
-elif algorithmChoice == 2:
 
-    print("running Brute Force algorithm")
-    solver = TSP(BruteForce())
+    filename = filedialog.askopenfilename(
+        title="Select coordinate file",
+        filetypes=[("Text files", "*.txt"), ("All files", "*.*")]
+    )
 
-
-
-elif algorithmChoice == 3:
-
-    print("running two opt heuristic")
-    solver = TSP(twoOpt())
+    if filename:
+        coordinateChoice.set(filename)
 
 
+'''
 
-elif algorithmChoice == 4:
     
-    print("running Held Karp's")
-    solver = TSP(HeldKarp())
-    
 
-timeStart = time.perf_counter()
-route = solver.solve(cities)
-timeEnd = time.perf_counter()
-print(f"Runtime: {timeEnd - timeStart:.6f} seconds")
-#plots the graph itself
-plotter = Plotter(route)
-plotter.drawGraph()
+
+root = tk.Tk()
+root.title("TSP Solver")
+root.geometry("3000x1500")
+
+
+
+
+
+
+
+title = tk.Label(root, text="TSP Solver")
+title.pack(pady=20)
+
+
+instruction = tk.Label( root, text="Algorithm")
+instruction.pack(pady=10)
+
+#variables that represent the choice of the radiobuttons
+algorithmChoice = tk.IntVar(value=1)
+coordinateChoice = tk.StringVar(value="Short_Coords.txt")
+
+def chooseFile():
+    filename = filedialog.askopenfilename(title = "select coordinate file", filetypes= [("Text Files", "*.txt")])
+    if filename:
+        coordinateChoice.set(filename)
+
+
+    #return filename
+
+
+#frames the menu with pixel measurements
+menu = tk.Frame(root, width=500, height=100)
+menu.pack()
+
+
+#coordinate handling
+tk.Button(menu, text="default coords", command = lambda: coordinateChoice.set("Coords.txt")).place(x=20, y=20)
+tk.Button(menu, text = "Add your coordinate file", command = chooseFile).place(x=20, y=80)
+
+
+#algorithm selection handling
+tk.Radiobutton( root, text="Nearest Neighbour", variable=algorithmChoice, value = 1).pack(anchor="w", padx=100, pady = 10)
+tk.Radiobutton(root, text="Brute Force", variable=algorithmChoice, value= 2).pack(anchor="w", padx=100, pady = 10)
+tk.Radiobutton(root, text="Two Opt Heuristic", variable = algorithmChoice,value =  3).pack(anchor="w", padx=100, pady = 10)
+tk.Radiobutton(root, text = "Held Karp", variable = algorithmChoice, value = 4).pack(anchor="w", padx=100, pady=10)
+
+
+
+runButton = tk.Button(root, text = "Solve", width = 20, command=lambda: run_solver(algorithmChoice.get()))
+runButton.pack(pady = 10)
+
+
+root.mainloop()
+
+
 
 
 
