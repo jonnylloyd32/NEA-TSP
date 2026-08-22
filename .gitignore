@@ -1,0 +1,173 @@
+# =========================
+
+# Python + Visual Studio
+
+# =========================
+
+# -------------------------
+
+# Visual Studio
+
+# -------------------------
+
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# -------------------------
+
+# Python cache
+
+# -------------------------
+
+**pycache**/
+*.py[cod]
+*$py.class
+*.pyo
+
+# -------------------------
+
+# Virtual environments
+
+# -------------------------
+
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# -------------------------
+
+# Environment variables
+
+# -------------------------
+
+.env
+.env.*
+!.env.example
+
+# -------------------------
+
+# Testing / coverage
+
+# -------------------------
+
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+
+# -------------------------
+
+# Type checking
+
+# -------------------------
+
+.mypy_cache/
+.pyre/
+.pytype/
+.pyright/
+
+# -------------------------
+
+# Linters / formatters
+
+# -------------------------
+
+.ruff_cache/
+.black/
+.isort_cache/
+
+# -------------------------
+
+# Jupyter
+
+# -------------------------
+
+.ipynb_checkpoints/
+
+# -------------------------
+
+# Python packaging
+
+# -------------------------
+
+.Python
+build/
+dist/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+*.egg
+*.egg-info/
+.installed.cfg
+*.egg-info/
+pip-wheel-metadata/
+share/python-wheels/
+wheels/
+
+# -------------------------
+
+# Logs
+
+# -------------------------
+
+*.log
+
+# -------------------------
+
+# Databases
+
+# -------------------------
+
+*.sqlite
+*.sqlite3
+*.db
+
+# -------------------------
+
+# OS files
+
+# -------------------------
+
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# -------------------------
+
+# Secrets / credentials
+
+# -------------------------
+
+*.pem
+*.key
+credentials.json
+secrets.json
+
+# -------------------------
+
+# PyInstaller
+
+# -------------------------
+
+*.manifest
+*.spec
+
+# -------------------------
+
+# Local configuration
+
+# -------------------------
+
+*.local
+.vs/
