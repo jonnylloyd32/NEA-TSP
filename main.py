@@ -408,6 +408,12 @@ class HeldKarp(tspSolver):
         totalDist = RouteDistanceCalc(myRoute)
         print(totalDist)
         return myRoute
+
+class BranchandBound(tspSolver):
+
+    def solve(self, cities):
+        
+       return bestRoute
         
 
 class TSP:
@@ -440,6 +446,8 @@ def run_solver(algorithmChoice):
         elif algorithmChoice == 4:
             solver = TSP(HeldKarp())
 
+        elif algorithmChoice == 5:
+            solver = TSP(BranchandBound())
         else:
             messagebox.showerror("Error", "Please select an algorithm.")
             return
@@ -456,24 +464,40 @@ def run_solver(algorithmChoice):
         except:
             pass
 
-        progress_window.geometry("400x300+1400+100")
-        gif_label = tk.Label(progress_window)
-        #gif_label.place(x=300,y=100)
-        gif_label.pack(pady=10)
+        
+        progress_window.geometry("500x300+1400+100")
 
-        #actually animates thegifF
+        gifFrame = tk.Frame(progress_window)
+        gifFrame.pack(pady=20)
+
+        gif_label = tk.Label(gifFrame)
+        gif_label.pack(side=tk.LEFT, padx=10)
+
+        distanceReveal = tk.Label(progress_window, text = "Calculating distance: ", font = ("Book Antiqua", 14))
+        distanceReveal.pack(side = tk.LEFT, pady = 50)
+
+               
+        timerLabel = tk.Label(gifFrame, text="Runtime: ", font = ("Helvetica", 14))
+        timerLabel.pack(side=tk.LEFT, padx=10)
+
+        #aanimates the gif
         def animate(frame_number=0):
             if progress_window.winfo_exists():
                 gif_label.config(image=frames[frame_number])
                 progress_window.after(100, animate, (frame_number + 1) % len(frames))
-        
+
         animate()
 
+        
         route = solver.solve(cities)
+
+        totalDistance = RouteDistanceCalc(route)
+        distanceReveal.config(text = f"Distance travelled: {totalDistance:.6f} units")
+
         timeEnd = time.perf_counter()
-
         runtime = timeEnd - timeStart
-
+        timerLabel.config(text = f"Runtime: {runtime:.6f} seconds")
+        
         print(f"Runtime: {runtime:.6f} seconds")
         #gif_label.destroy()
         #progress_window.destroy()
@@ -535,7 +559,7 @@ def chooseFile():
 
 
     #return filename
-
+6
 
 #frames the menu with pixel measurements
 menu = tk.Frame(root, width=500, height=100)
@@ -549,17 +573,22 @@ tk.Button(menu, text = "Add your coordinate file", command = chooseFile).place(x
 
 #algorithm selection handling
 tk.Radiobutton( root, text="Nearest Neighbour", variable=algorithmChoice, value = 1).pack(anchor="w", padx=100, pady = 10)
-tk.Radiobutton(root, text="Brute Force", variable=algorithmChoice, value= 2).pack(anchor="w", padx=100, pady = 10)
+tk.Radiobutton(root, text="Brute force", variable=algorithmChoice, value= 2).pack(anchor="w", padx=100, pady = 10)
 tk.Radiobutton(root, text="Two Opt Heuristic", variable = algorithmChoice,value =  3).pack(anchor="w", padx=100, pady = 10)
 tk.Radiobutton(root, text = "Held Karp", variable = algorithmChoice, value = 4).pack(anchor="w", padx=100, pady=10)
+tk.Radiobutton(root, text = "Branch and bound", variable = algorithmChoice, value = 5).pack(anchor = "w", padx=100, pady=10)
 
 
 
 runButton = tk.Button(root, text = "Solve", width = 20, command=lambda: run_solver(algorithmChoice.get()))
+
+
 runButton.pack(pady = 10)
 
 
 root.mainloop()
+
+
 
 
 
