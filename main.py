@@ -303,16 +303,16 @@ class BruteForce(tspSolver):
 
 
 #HeldKarp solver class
-#please dont ask me to explain any of this dude, im talking to you Joe!
-#OR ELSE... *ominous music plays*
-#its actually given my brain aids
+#its given my brain aids so it can fook right off
+#prick.
+
 class HeldKarp(tspSolver):
     def solve(self, cities):
         #number of cities in the path
         numCities = len(cities)
 
 
-        #this bastard creates a matrix using the number of cities, at the time its 12, so it creates a 12 X 12  2D matrix an dfills it in with 0's
+        #this creates a matrix using the number of cities, at the time its 12, so it creates a 12 X 12  2D matrix an dfills it in with 0's
         dist = np.zeros((numCities, numCities), dtype=float)
         #print(dist)
 
@@ -412,8 +412,66 @@ class HeldKarp(tspSolver):
 class BranchandBound(tspSolver):
 
     def solve(self, cities):
+
+        initialRoute = [startCity]
+
+        numCities = len(cities)
+        distMatrix = dist = np.zeros((numCities, numCities), dtype=float)
+        for i in range(numCities):
+            for j in range(numCities):
+                distMatrix[i][j] = cities[i].distanceTo(cities[j])
+
+        bestRoute = []
+        bestDistance = float('inf')
+
+        startCity = cities[0]
+
+        for i in range(1, len(cities)):
+            currentCity = cities[i]
+            initialRoute += [currentCity]
+
+
+        bestRoute = initialRoute
+        bestDistance = RouteDistanceCalc(bestRoute)
+
+
+        currentRoute = [startCity]
+        unvisited = cities[1:]
+
+        def BaB(currentRoute, unvisited):
+            nonlocal bestRoute, bestDistance
+
+
+            return bestRoute
+
+
+        '''
+        Start with city 0.
+Build the route one city at a time.
+At each point, branch by trying every possible unvisited city.
+Calculate a lower bound for the best possible completion of that partial route.
+If that lower bound is already worse than the best complete route we've found, don't explore that branch.
+Otherwise, keep exploring it.
+Once all cities are visited, calculate the complete route and update the best route.
+        '''
         
-       return bestRoute
+        #return bestRoute
+
+
+
+
+def geographicDistanceCalc(city1, city2):
+    #converts lat and long from degrees to radians
+    lat1 = math.radians(city1.y)
+    lon1 = math.radians(city1.x)
+    lat2 = math.radians(city2.y)
+    lon2 = math.radians(city2.x)
+    
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
+    c = 2 * math.asin(math.sqrt(a))
+    return c * 6371
         
 
 class TSP:
@@ -464,19 +522,21 @@ def run_solver(algorithmChoice):
         except:
             pass
 
+
+
         
-        progress_window.geometry("500x300+1400+100")
+        progress_window.geometry("700x300+1200+100")
 
         gifFrame = tk.Frame(progress_window)
-        gifFrame.pack(pady=20)
+        gifFrame.pack(pady=10)
 
         gif_label = tk.Label(gifFrame)
         gif_label.pack(side=tk.LEFT, padx=10)
 
-        distanceReveal = tk.Label(progress_window, text = "Calculating distance: ", font = ("Book Antiqua", 14))
-        distanceReveal.pack(side = tk.LEFT, pady = 50)
-
-               
+        distanceReveal = tk.Label(gifFrame, text = "Calculating distance: ", font = ("Book Antiqua", 14))
+        #distanceReveal.pack(side = tk.LEFT, pady = 80)
+        distanceReveal.pack()
+        
         timerLabel = tk.Label(gifFrame, text="Runtime: ", font = ("Helvetica", 14))
         timerLabel.pack(side=tk.LEFT, padx=10)
 
@@ -490,8 +550,13 @@ def run_solver(algorithmChoice):
 
         
         route = solver.solve(cities)
+        totalDistance = 0
+        for i in range(len(route)):
+            geographicDistance = geographicDistanceCalc(route[i], route[(i + 1) % len(route)])
+            totalDistance += geographicDistance
 
-        totalDistance = RouteDistanceCalc(route)
+
+        #totalDistance = (route)
         distanceReveal.config(text = f"Distance travelled: {totalDistance:.6f} units")
 
         timeEnd = time.perf_counter()
@@ -535,18 +600,37 @@ root = tk.Tk()
 root.title("TSP Solver")
 root.geometry("3000x1500")
 
+#background gif handling
+bgGif = Image.open("EarthRotating.gif")
+bgFrames = []
+try:
+    while True:
+        frame_image = bgGif.copy().resize((1500,1200), Image.LANCZOS)
+        frame = ImageTk.PhotoImage(frame_image)
+
+        bgFrames.append(frame)
+        bgGif.seek(len(bgFrames))
+except EOFError:
+    pass
+
+bgLabel = tk.Label(root)
+bgLabel.place(x = 20, y = 20, relwidth=1, relheight=1)
+
+def animate_bg(frame_number = 0):
+    bgLabel.config(image = bgFrames[frame_number])
+    root.after(100, animate_bg, (frame_number + 1) %len (bgFrames))
+
+animate_bg()
 
 
 
 
 
-
-title = tk.Label(root, text="TSP Solver")
+title = tk.Label(root, text="TSP Solver", font = ("Helvetica", 48, "bold"))
 title.pack(pady=20)
 
 
-instruction = tk.Label( root, text="Algorithm")
-instruction.pack(pady=10)
+
 
 #variables that represent the choice of the radiobuttons
 algorithmChoice = tk.IntVar(value=1)
@@ -568,15 +652,23 @@ menu.pack()
 
 #coordinate handling
 tk.Button(menu, text="default coords", command = lambda: coordinateChoice.set("Coords.txt")).place(x=20, y=20)
-tk.Button(menu, text = "Add your coordinate file", command = chooseFile).place(x=20, y=80)
+tk.Button(menu, text = "Add your coordinate file", command = chooseFile).place(x=20, y=60)
 
+
+algorithmFrame = tk.Frame(root)
+algorithmFrame.pack(pady = 50)
+algorithmLabel = tk.Label(algorithmFrame, text="Choose a TSP algorithm:")
+algorithmLabel.pack()
+
+#instruction = tk.Label( root, text="Choose a TSP algorithm")
+#instruction.pack(pady=10, padx = 10)
 
 #algorithm selection handling
-tk.Radiobutton( root, text="Nearest Neighbour", variable=algorithmChoice, value = 1).pack(anchor="w", padx=100, pady = 10)
-tk.Radiobutton(root, text="Brute force", variable=algorithmChoice, value= 2).pack(anchor="w", padx=100, pady = 10)
-tk.Radiobutton(root, text="Two Opt Heuristic", variable = algorithmChoice,value =  3).pack(anchor="w", padx=100, pady = 10)
-tk.Radiobutton(root, text = "Held Karp", variable = algorithmChoice, value = 4).pack(anchor="w", padx=100, pady=10)
-tk.Radiobutton(root, text = "Branch and bound", variable = algorithmChoice, value = 5).pack(anchor = "w", padx=100, pady=10)
+tk.Radiobutton( algorithmFrame, text="Nearest Neighbour", variable=algorithmChoice, value = 1).pack(anchor="w", padx=100, pady = 10)
+tk.Radiobutton(algorithmFrame, text="Brute force", variable=algorithmChoice, value= 2).pack(anchor="w", padx=100, pady = 10)
+tk.Radiobutton(algorithmFrame, text="Two Opt Heuristic", variable = algorithmChoice,value =  3).pack(anchor="w", padx=100, pady = 10)
+tk.Radiobutton(algorithmFrame, text = "Held Karp", variable = algorithmChoice, value = 4).pack(anchor="w", padx=100, pady=10)
+tk.Radiobutton(algorithmFrame, text = "Branch and bound", variable = algorithmChoice, value = 5).pack(anchor = "w", padx=100, pady=10)
 
 
 
@@ -586,12 +678,8 @@ runButton = tk.Button(root, text = "Solve", width = 20, command=lambda: run_solv
 runButton.pack(pady = 10)
 
 
+
+
+
+
 root.mainloop()
-
-
-
-
-
-
-
-
