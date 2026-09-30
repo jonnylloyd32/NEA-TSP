@@ -94,10 +94,13 @@ def loadCities(filename):
 def loadDefaultCities():
     cities = []
     file = "Coords.txt"
-    with open() as file:
-            for line in file:
-                x, y = map(int, line.strip().split(","))
-                cities.append(City(x, y))
+    try:
+        with open() as file:
+                for line in file:
+                    x, y = map(int, line.strip().split(","))
+                    cities.append(City(x, y))
+    except FileNotFoundError:
+        raise Exception("Check if the file is added to the folder correctly or if you miss-spelt it") 
     
     return cities
 
