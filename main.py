@@ -416,13 +416,14 @@ class BranchandBound(tspSolver):
 
     def solve(self, cities):
 
+        startCity = cities[0]
         initialRoute = [startCity]
 
         numCities = len(cities)
-        distMatrix = dist = np.zeros((numCities, numCities), dtype=float)
+        dist_Matrix = np.zeros((numCities, numCities), dtype=float)
         for i in range(numCities):
             for j in range(numCities):
-                distMatrix[i][j] = cities[i].distanceTo(cities[j])
+                dist_Matrix[i][j] = cities[i].distanceTo(cities[j])
 
         bestRoute = []
         bestDistance = float('inf')
@@ -441,12 +442,110 @@ class BranchandBound(tspSolver):
         currentRoute = [startCity]
         unvisited = cities[1:]
 
-        def BaB(currentRoute, unvisited):
-            nonlocal bestRoute, bestDistance
+        def BaB(currentRoute, unvisited, currentDistance):
+            if len(unvisited) == 0:
+                totalDistance = (currentDistance + currentRoute[-1].distanceTo(currentRoute[0]))
+
+'''
+FUNCTION BranchAndBound(cities)
+
+    startCity = cities[0]
+
+    bestRoute = NearestNeighbour(cities)
+    bestDistance = RouteDistance(bestRoute)
+
+    PROCEDURE BaB(currentRoute, unvisited, currentDistance)
+
+        IF length(unvisited) = 0 THEN
+
+            totalDistance = currentDistance +
+                            Distance(last city in currentRoute,
+                                     startCity)
+
+            IF totalDistance < bestDistance THEN
+
+                bestDistance = totalDistance
+                bestRoute = copy of currentRoute
+
+            ENDIF
+
+            RETURN
+
+        ENDIF
 
 
-            return bestRoute
+        bound = currentDistance
 
+        FOR EACH city IN unvisited
+
+            nearestDistance = INFINITY
+
+            FOR EACH otherCity IN cities
+
+                IF city != otherCity THEN
+
+                    IF Distance(city, otherCity) = nearestDistance THEN
+                        nearestDistance = Distance(city, otherCity)
+                    ENDIF
+
+                ENDIF
+
+            ENDFOR
+
+            bound = bound + nearestDistance
+
+        ENDFOR
+
+
+        IF bound ≥ bestDistance THEN
+            RETURN
+        ENDIF
+
+
+        FOR EACH city IN unvisited
+
+            newRoute = copy of currentRoute
+            add city to newRoute
+
+            newUnvisited = copy of unvisited
+            remove city from newUnvisited
+
+            newDistance = currentDistance +
+                           Distance(last city in currentRoute,
+                                    city)
+
+            BaB(
+                newRoute,
+                newUnvisited,
+                newDistance
+            )
+
+        ENDFOR
+
+    ENDPROCEDURE
+
+
+    BaB(
+        [startCity],
+        all cities except startCity,
+        0
+    )
+
+    RETURN bestRoute
+
+ENDFUNCTION
+'''
+
+
+        
+
+
+        #def BaB(currentRoute, unvisited):
+        #    nonlocal bestRoute, bestDistance
+        #    
+        #    return bestRoute
+
+        #return bestRoute
 
         '''
         Start with city 0.
@@ -458,7 +557,7 @@ Otherwise, keep exploring it.
 Once all cities are visited, calculate the complete route and update the best route.
         '''
         
-        #return bestRoute
+
 
 
 
@@ -470,9 +569,14 @@ def geographicDistanceCalc(city1, city2):
     lat2 = math.radians(city2.y)
     lon2 = math.radians(city2.x)
     
-    dlat = lat2 - lat1
-    dlon = lon2 - lon1
-    a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
+    lat_dist = lat2 - lat1
+    lon_dist = lon2 - lon1
+    #a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
+    w = math.sin(lat_dist / 2)**2
+    x = math.cos(lat1)
+    y = math.cos(lat2)
+    z = math.sin(lon_dist / 2) **2
+    a = w + x * y * z
     c = 2 * math.asin(math.sqrt(a))
     return c * 6371
         
@@ -554,13 +658,22 @@ def run_solver(algorithmChoice):
         
         route = solver.solve(cities)
         totalDistance = 0
+
+        #############################################
+        #testing:
+        route = solver.solve(cities)
+        print(route)
+        print(type)
+
+
+
         for i in range(len(route)):
             geographicDistance = geographicDistanceCalc(route[i], route[(i + 1) % len(route)])
             totalDistance += geographicDistance
 
 
         #totalDistance = (route)
-        distanceReveal.config(text = f"Distance travelled: {totalDistance:.6f} units")
+        distanceReveal.config(text = f"Distance travelled: {totalDistance:.6f} Kilometers")
 
         timeEnd = time.perf_counter()
         runtime = timeEnd - timeStart
