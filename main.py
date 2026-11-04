@@ -412,22 +412,42 @@ class HeldKarp(tspSolver):
         print(totalDist)
         return myRoute
 
+
+
+
+#Start with city 0.
+#Build the route one city at a time.
+#At each point, branch by trying every possible unvisited city.
+#Calculate a lower bound for the best possible completion of that partial route.
+#If that lower bound is already worse than the best complete route we've found, don't explore that branch.
+#Otherwise, keep exploring it.
+#Once all cities are visited, calculate the complete route and update the best route.
+#
+        
+
+
+
+
 class BranchandBound(tspSolver):
 
     def solve(self, cities):
 
         startCity = cities[0]
         initialRoute = [startCity]
-
+        #calculates how many cities are in the list
         numCities = len(cities)
+        #creates a 2D matrix of the distances between each city with the distanceTo method
         dist_Matrix = np.zeros((numCities, numCities), dtype=float)
+        #loops through the cities calculating distance to eachother and adds it to the 2D matrix
         for i in range(numCities):
             for j in range(numCities):
                 dist_Matrix[i][j] = cities[i].distanceTo(cities[j])
 
+        #initialises the best route list and creates an infinite value for distance so that it is never exceded by any other distance
         bestRoute = []
         bestDistance = float('inf')
 
+        #sets the start city to the first city in the list
         startCity = cities[0]
 
         for i in range(1, len(cities)):
@@ -440,101 +460,55 @@ class BranchandBound(tspSolver):
 
 
         currentRoute = [startCity]
+        #sets the unvisited cities to all the cities except the first one which is the start city
         unvisited = cities[1:]
 
         def BaB(currentRoute, unvisited, currentDistance):
+            nonlocal bestRoute, bestDistance
+
             if len(unvisited) == 0:
-                totalDistance = (currentDistance + currentRoute[-1].distanceTo(currentRoute[0]))
+                #currentRoute[-1] is the final item in the list of cities
+                #currentRoute[0] is the first item in the list of cities
+                totalDistance = (currentDistance + currentRoute[len(currentRoute) - 1].distanceTo(currentRoute[0]))
+                if totalDistance < bestDistance:
+                    bestDistance = totalDistance
+                    bestRoute = currentRoute.copy() 
 
-'''
-FUNCTION BranchAndBound(cities)
+                    return
+                #sets the lowest bound to the curent distance of the route so far to act as a marker to compare
+                bound = currentDistance
 
-    startCity = cities[0]
+                #loops through all the unvisited cities and
+                for city in unvisited:
+                    nearestDistance = float('inf')
 
-    bestRoute = NearestNeighbour(cities)
-    bestDistance = RouteDistance(bestRoute)
+                    #loops through all the cities to find the nearest distance to the current city
+                    for otherCity in cities:
+                        if city != otherCity:
+                            distance = city.distanceTo(otherCity)
+                            if distance < nearestDistance:
+                                nearestDistance = distance
+                    bound += nearestDistance
 
-    PROCEDURE BaB(currentRoute, unvisited, currentDistance)
-
-        IF length(unvisited) = 0 THEN
-
-            totalDistance = currentDistance +
-                            Distance(last city in currentRoute,
-                                     startCity)
-
-            IF totalDistance < bestDistance THEN
-
-                bestDistance = totalDistance
-                bestRoute = copy of currentRoute
-
-            ENDIF
-
-            RETURN
-
-        ENDIF
+                    if bound >= bestDistance:   
+                        return 
 
 
-        bound = currentDistance
+                    #loops through all the currently unvisted cities and ads them to the current route and removes them from this list
+                    for city in unvisited:
+                        #copys the current route and adds the new city to it
+                        newRoute = currentRoute.copy()
+                        #adds the city to the end of the current route
+                        newRoute.append(city)
 
-        FOR EACH city IN unvisited
+                        newUnvisited = unvisited.copy()
+                        newUnvisited.remove(city)
 
-            nearestDistance = INFINITY
+                        #updates newDistance with the distance from last city in currentRioute to the new city being added here
+                        newDistance = (currentDistance + currentRoute[-1].distanceTo(city))
 
-            FOR EACH otherCity IN cities
-
-                IF city != otherCity THEN
-
-                    IF Distance(city, otherCity) = nearestDistance THEN
-                        nearestDistance = Distance(city, otherCity)
-                    ENDIF
-
-                ENDIF
-
-            ENDFOR
-
-            bound = bound + nearestDistance
-
-        ENDFOR
-
-
-        IF bound ≥ bestDistance THEN
-            RETURN
-        ENDIF
-
-
-        FOR EACH city IN unvisited
-
-            newRoute = copy of currentRoute
-            add city to newRoute
-
-            newUnvisited = copy of unvisited
-            remove city from newUnvisited
-
-            newDistance = currentDistance +
-                           Distance(last city in currentRoute,
-                                    city)
-
-            BaB(
-                newRoute,
-                newUnvisited,
-                newDistance
-            )
-
-        ENDFOR
-
-    ENDPROCEDURE
-
-
-    BaB(
-        [startCity],
-        all cities except startCity,
-        0
-    )
-
-    RETURN bestRoute
-
-ENDFUNCTION
-'''
+                        #makes the recursive call back to the function to explore new routes with the now updated unvisited items
+                        BaB(newRoute, newUnvisited, newDistance)
 
 
         
@@ -547,16 +521,6 @@ ENDFUNCTION
 
         #return bestRoute
 
-        '''
-        Start with city 0.
-Build the route one city at a time.
-At each point, branch by trying every possible unvisited city.
-Calculate a lower bound for the best possible completion of that partial route.
-If that lower bound is already worse than the best complete route we've found, don't explore that branch.
-Otherwise, keep exploring it.
-Once all cities are visited, calculate the complete route and update the best route.
-        '''
-        
 
 
 
