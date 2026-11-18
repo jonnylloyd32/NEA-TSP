@@ -626,7 +626,7 @@ def run_solver(algorithmChoice):
 
         #############################################
         #testing:
-        route = solver.solve(cities)
+        #route = solver.solve(cities)
         print(route)
         print(type)
 
