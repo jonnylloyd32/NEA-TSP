@@ -70,7 +70,8 @@ def loadCities(filename):
     try:
         with open(filename) as file:
             for line in file:
-                x, y = map(int, line.strip().split(","))
+                x, y = map(float
+                           , line.strip().split(","))
                 cities.append(City(x, y))
                 
 #checks if the file name is available and calls this 
@@ -97,7 +98,7 @@ def loadDefaultCities():
     try:
         with open() as file:
                 for line in file:
-                    x, y = map(int, line.strip().split(","))
+                    x, y = map(float, line.strip().split(","))
                     cities.append(City(x, y))
     except FileNotFoundError:
         raise Exception("Check if the file is added to the folder correctly or if you miss-spelt it") 
